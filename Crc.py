@@ -45,8 +45,8 @@ class CRCCCITT(object):
 
             crc = [int(crcValue >> i & 0xff) for i in (8, 0)]
 
-            input_data.apppend(crc[1])
-            input_data.apppend(crc[0])
+            input_data.append(crc[1])
+            input_data.append(crc[0])
 
             return
         except Exception as e:
