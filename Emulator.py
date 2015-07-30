@@ -10,6 +10,8 @@ board.baudrate = 115200
 #crc calculator
 crcCalculator = CRCCCITT()
 
+packetLength = 13;
+
 # Header
 preamble = 0x55
 version = 0x01
@@ -42,11 +44,27 @@ action['map'] = 0x06
 action['volume out'] = 0x07
 action['mag threshold'] = 0x08
 action['write settings'] = 0x09
-action['read mag'] = 0x0A
+action['read settings'] = 0x0A
+action['read mag'] = 0x0B
 
-conCheck = [preamble, version, mode['conn check'], channel['none'], 0x00, 0x00, 0x00]
-conCheckAnsw = [preamble, version, mode['ack'], channel['none'], 0x00, 0x00, 0x00]
-ack = [preamble, version, mode['ack'], channel['none'], 0x00, 0x00, 0x00]
+conCheck = [preamble, version, mode['conn check'], channel['none'], 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+conCheckAnsw = [preamble, version, mode['ack'], channel['none'], 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+ack = [preamble, version, mode['ack'], channel['none'], 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+ack_read_settings = [preamble, version, mode['ack'], channel['none'], 0x00, 0x00, 0x00, 0x55, 0xBA, 0x1A, 0xBB]
+ack_write_settings = [preamble, version, mode['ack'], channel['none'], 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+zeros = 0x00
+
+# errors
+errors = {}
+errors['crc'] = [preamble, version, mode['ack'], zeros, zeros, zeros, 0x01]
+errors['attribute'] = [preamble, version, mode['ack'], zeros, zeros, zeros, 0x02]
+errors['setting'] = [preamble, version, mode['ack'], zeros, zeros, zeros, 0x03]
+errors['channel'] = [preamble, version, mode['ack'], zeros, zeros, zeros, 0x04]
+errors['operation'] = [preamble, version, mode['ack'], zeros, zeros, zeros, 0x05]
+errors['protocol'] = [preamble, version, mode['ack'], zeros, zeros, zeros, 0x06]
+
 
 # LINE 1
 lines = {}
@@ -55,11 +73,72 @@ lines[1]['delay'] = [preamble, version, mode['read'], action['delay'], channel['
 lines[1]['tone'] = [preamble, version, mode['read'], action['tone'], channel['one'], 0x00, 0x01]
 lines[1]['timeout'] = [preamble, version, mode['read'], action['timeout'], channel['one'], 0x00, 0x21]
 lines[1]['volume in'] = [preamble, version, mode['read'], action['volume in'], channel['one'], 0x00, 0x40]
-lines[1]['mute'] = [preamble, version, mode['read'], action['mute'], channel['one'], 0x00, 0x01]
+lines[1]['mute'] = [preamble, version, mode['read'], action['mute'], channel['one'], 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]
 lines[1]['map'] = [preamble, version, mode['read'], action['map'], channel['one'], 0x00, 0x01]
-lines[1]['volume out'] = [preamble, version, mode['read'], action['volume out'], channel['one'], 0x00, 0x02]
+lines[1]['volume out'] = [preamble, version, mode['read'], action['volume out'], channel['one'], 0x00, 0x0a]
 lines[1]['mag threshold'] = [preamble, version, mode['read'], action['mag threshold'], channel['one'], 0x00, 0x02]
 lines[1]['read mag'] = [preamble, version, mode['read'], action['read mag'], channel['one'], 0x00, 0x02]
+
+# LINE 2
+lines[2] = {}
+lines[2]['delay'] = [preamble, version, mode['read'], action['delay'], channel['two'], 0x00, 0xff]
+lines[2]['tone'] = [preamble, version, mode['read'], action['tone'], channel['two'], 0x00, 0x01]
+lines[2]['timeout'] = [preamble, version, mode['read'], action['timeout'], channel['two'], 0x00, 0x11]
+lines[2]['volume in'] = [preamble, version, mode['read'], action['volume in'], channel['two'], 0x00, 0x10]
+lines[2]['mute'] = [preamble, version, mode['read'], action['mute'], channel['two'], 0x00, 0x01]
+lines[2]['map'] = [preamble, version, mode['read'], action['map'], channel['two'], 0x00, 0x01]
+lines[2]['volume out'] = [preamble, version, mode['read'], action['volume out'], channel['two'], 0x00, 0x40]
+lines[2]['mag threshold'] = [preamble, version, mode['read'], action['mag threshold'], channel['two'], 0x00, 0x01]
+lines[2]['read mag'] = [preamble, version, mode['read'], action['read mag'], channel['two'], 0x00, 0x02]
+
+# LINE 3
+lines[3] = {}
+lines[3]['delay'] = [preamble, version, mode['read'], action['delay'], channel['three'], 0x00, 0x0f]
+lines[3]['tone'] = [preamble, version, mode['read'], action['tone'], channel['three'], 0x00, 0x01]
+lines[3]['timeout'] = [preamble, version, mode['read'], action['timeout'], channel['three'], 0x00, 0x11]
+lines[3]['volume in'] = [preamble, version, mode['read'], action['volume in'], channel['three'], 0x00, 0x10]
+lines[3]['mute'] = [preamble, version, mode['read'], action['mute'], channel['three'], 0x00, 0x01]
+lines[3]['map'] = [preamble, version, mode['read'], action['map'], channel['three'], 0x00, 0x01]
+lines[3]['volume out'] = [preamble, version, mode['read'], action['volume out'], channel['three'], 0x00, 0x40]
+lines[3]['mag threshold'] = [preamble, version, mode['read'], action['mag threshold'], channel['three'], 0x00, 0x01]
+lines[3]['read mag'] = [preamble, version, mode['read'], action['read mag'], channel['three'], 0x00, 0x02]
+
+# LINE 4
+lines[4] = {}
+lines[4]['delay'] = [preamble, version, mode['read'], action['delay'], channel['four'], 0x00, 0x0a]
+lines[4]['tone'] = [preamble, version, mode['read'], action['tone'], channel['four'], 0x00, 0x01]
+lines[4]['timeout'] = [preamble, version, mode['read'], action['timeout'], channel['four'], 0x00, 0x11]
+lines[4]['volume in'] = [preamble, version, mode['read'], action['volume in'], channel['four'], 0x00, 0x10]
+lines[4]['mute'] = [preamble, version, mode['read'], action['mute'], channel['four'], 0x00, 0x01]
+lines[4]['map'] = [preamble, version, mode['read'], action['map'], channel['four'], 0x00, 0x01]
+lines[4]['volume out'] = [preamble, version, mode['read'], action['volume out'], channel['four'], 0x00, 0x40]
+lines[4]['mag threshold'] = [preamble, version, mode['read'], action['mag threshold'], channel['four'], 0x00, 0x01]
+lines[4]['read mag'] = [preamble, version, mode['read'], action['read mag'], channel['four'], 0x00, 0x02]
+
+# LINE 5
+lines[5] = {}
+lines[5]['delay'] = [preamble, version, mode['read'], action['delay'], channel['five'], 0x00, 0x08]
+lines[5]['tone'] = [preamble, version, mode['read'], action['tone'], channel['five'], 0x00, 0x01]
+lines[5]['timeout'] = [preamble, version, mode['read'], action['timeout'], channel['five'], 0x00, 0x11]
+lines[5]['volume in'] = [preamble, version, mode['read'], action['volume in'], channel['five'], 0x00, 0x10]
+lines[5]['mute'] = [preamble, version, mode['read'], action['mute'], channel['five'], 0x00, 0x01]
+lines[5]['map'] = [preamble, version, mode['read'], action['map'], channel['five'], 0x00, 0x01]
+lines[5]['volume out'] = [preamble, version, mode['read'], action['volume out'], channel['five'], 0x00, 0x40]
+lines[5]['mag threshold'] = [preamble, version, mode['read'], action['mag threshold'], channel['five'], 0x00, 0x01]
+lines[5]['read mag'] = [preamble, version, mode['read'], action['read mag'], channel['five'], 0x00, 0x02]
+
+# LINE 6
+lines[6] = {}
+lines[6]['delay'] = [preamble, version, mode['read'], action['delay'], channel['six'], 0x00, 0x02]
+#lines[6]['delay'] = errors['crc']
+lines[6]['tone'] = [preamble, version, mode['read'], action['tone'], channel['six'], 0x00, 0x01]
+lines[6]['timeout'] = [preamble, version, mode['read'], action['timeout'], channel['six'], 0x00, 0x11]
+lines[6]['volume in'] = [preamble, version, mode['read'], action['volume in'], channel['six'], 0x00, 0x10]
+lines[6]['mute'] = [preamble, version, mode['read'], action['mute'], channel['six'], 0x00, 0x01]
+lines[6]['map'] = [preamble, version, mode['read'], action['map'], channel['six'], 0x00, 0x01]
+lines[6]['volume out'] = [preamble, version, mode['read'], action['volume out'], channel['six'], 0x00, 0x40]
+lines[6]['mag threshold'] = [preamble, version, mode['read'], action['mag threshold'], channel['six'], 0x00, 0x01]
+lines[6]['read mag'] = [preamble, version, mode['read'], action['read mag'], channel['six'], 0x00, 0x02]
 
 def compare_packets(first, second):
     return all(map(lambda v: v in map(ord, first), second))
@@ -93,6 +172,8 @@ def read_packet_handler(packet):
         return
 
     crcCalculator.calculate(response)
+    # generate crc error
+    # response[6] = 0xff
     board.write(response)
     print "Packet send: " + '-'.join('%2x' % c for c in response)
 
@@ -100,40 +181,54 @@ def write_packet_handler(packet):
     ack_response = ack[:]
     crcCalculator.calculate(ack_response)
 
-    if ord(packet[3]) == action['tone']:
-        print "Write Tone Detection packet come..."
-        slot = lines[ord(packet[4])]['tone']
-    elif ord(packet[3]) == action['delay']:
-        print "Write Delay packet come..."
-        slot = lines[ord(packet[4])]['delay']
-    elif ord(packet[3]) == action['timeout']:
-        print "Write Timeout packet come..."
-        slot = lines[ord(packet[4])]['timeout']
-    elif ord(packet[3]) == action['volume in']:
-        print "Write Volume In packet come..."
-        slot = lines[ord(packet[4])]['volume in']
-    elif ord(packet[3]) == action['mute']:
-        print "Write Mute packet come..."
-        slot = lines[ord(packet[4])]['mute']
-    elif ord(packet[3]) == action['map']:
-        print "Write Map packet come..."
-        slot = lines[ord(packet[4])]['map']
-    elif ord(packet[3]) == action['volume out']:
-        print "Write Volume Out packet come..."
-        slot = lines[ord(packet[4])]['volume out']
-    elif ord(packet[3]) == action['mag threshold']:
-        print "Write Mag Threshold packet come..."
-        slot = lines[ord(packet[4])]['mag threshold']
-    elif ord(packet[3]) == action['read mag']:
-        print "Write Magnitude level packet come..."
-        slot = lines[ord(packet[4])]['read mag']
-    else:
-        print "ERROR: Write packet not recognized packet."
-        return
+    if ord(packet[4]) != channel['none']:
+        # Line settings
+        if ord(packet[3]) == action['tone']:
+            print "Write Tone Detection packet come..."
+            slot = lines[ord(packet[4])]['tone']
+        elif ord(packet[3]) == action['delay']:
+            print "Write Delay packet come..."
+            slot = lines[ord(packet[4])]['delay']
+        elif ord(packet[3]) == action['timeout']:
+            print "Write Timeout packet come..."
+            slot = lines[ord(packet[4])]['timeout']
+        elif ord(packet[3]) == action['volume in']:
+            print "Write Volume In packet come..."
+            slot = lines[ord(packet[4])]['volume in']
+        elif ord(packet[3]) == action['mute']:
+            print "Write Mute packet come..."
+            slot = lines[ord(packet[4])]['mute']
+        elif ord(packet[3]) == action['map']:
+            print "Write Map packet come..."
+            slot = lines[ord(packet[4])]['map']
+        elif ord(packet[3]) == action['volume out']:
+            print "Write Volume Out packet come..."
+            slot = lines[ord(packet[4])]['volume out']
+        elif ord(packet[3]) == action['mag threshold']:
+            print "Write Mag Threshold packet come..."
+            slot = lines[ord(packet[4])]['mag threshold']
+        elif ord(packet[3]) == action['read mag']:
+            print "Write Magnitude level packet come..."
+            slot = lines[ord(packet[4])]['read mag']
+        else:
+            print "ERROR: Write packet not recognized packet."
+            return
 
-    slot[5] = int(packet[5].encode('hex'), 16)
-    slot[6] = int(packet[6].encode('hex'), 16)
-    board.write(ack_response)
+        response_packet = [preamble, version, ord(packet[2]), ord(packet[3]), ord(packet[4]), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        crcCalculator.calculate(response_packet)
+        print "Packet send: " + '-'.join('%2x' % c for c in response_packet)
+
+        # slot[5] = int(packet[5].encode('hex'), 16)
+        # slot[6] = int(packet[6].encode('hex'), 16)
+
+        board.write(response_packet)
+    else:
+        # other settings
+        if ord(packet[3]) == action['read settings']:
+            board.write(ack_response)
+        if ord(packet[3]) == action['write settings']:
+            board.write(ack_response)
+
     return
 
 def connectivity__packet_handler(packet):
@@ -156,7 +251,7 @@ if __name__ == "__main__":
 
     while True:
         print "Waiting for packet..."
-        data = board.read(9)
+        data = board.read(packetLength)
 
         print "Packet come: " + '-'.join('%2x' % ord(c) for c in data)
 

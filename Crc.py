@@ -20,7 +20,7 @@ class CRCCCITT(object):
 
     def __init__(self, version='XModem'):
         try:
-            dict_versions = {'XModem': 0x0000, 'FFFF': 0xffff, '1D0F': 0x1d0f}
+            dict_versions = {'XModem': 0x0000, 'FFFF': 0xffff, '1D0F': 0x1d0f, '1021': 0x1021}
             if version not in dict_versions.keys():
                 raise Exception("Your version parameter should be one of \
                     the {} options".format("|".join(dict_versions.keys())))
@@ -45,8 +45,8 @@ class CRCCCITT(object):
 
             crc = [int(crcValue >> i & 0xff) for i in (8, 0)]
 
-            input_data.append(crc[1])
             input_data.append(crc[0])
+            input_data.append(crc[1])
 
             return
         except Exception as e:
